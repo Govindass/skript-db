@@ -51,9 +51,9 @@ import ch.njol.util.Kleenean;
  * @example execute "select * where player=%{player}%" in {sql} and store the result in {output::*}
  * @since 0.1.0
  */
-public class EffExecuteStatement extends Delay {
+public class EffSyncExecuteStatement extends Delay {
   static {
-    Skript.registerEffect(EffExecuteStatement.class, new String[] { "[(1¦synchronously)] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]" });
+    Skript.registerEffect(EffSyncExecuteStatement.class, new String[] { "sync[hronous[ly]] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]" });
   }
 
   static String lastError;
@@ -66,7 +66,7 @@ public class EffExecuteStatement extends Delay {
   private VariableString var;
   private boolean isLocal;
   private boolean isList;
-  private boolean isSync;
+  private boolean isSyncOk;
 
   private void continueScriptExecution(Event e, String res) {
     lastError = res;
@@ -80,13 +80,13 @@ public class EffExecuteStatement extends Delay {
   protected void execute(Event e) {
     boolean isMainThread = Bukkit.isPrimaryThread();
 
-    if (isSync) {
-      String result = executeStatement(e);
+    if (isSyncOk) {
+      String result = syncExecuteStatement(e);
       continueScriptExecution(e, result);
     } else {
 
       CompletableFuture<String> sql =
-          CompletableFuture.supplyAsync(() -> executeStatement(e), threadPool);
+          CompletableFuture.supplyAsync(() -> syncExecuteStatement(e), threadPool);
 
       sql.whenComplete((res, err) -> {
         if (err != null) {
@@ -101,14 +101,14 @@ public class EffExecuteStatement extends Delay {
   @Override
   protected TriggerItem walk(Event e) {
     debug(e, true);
-	if (!isSync) {
+	if (!isSyncOk) {
       SkriptUtil.delay(e);
 	}
     execute(e);
     return null;
   }
 
-  private String executeStatement(Event e) {
+  private String syncExecuteStatement(Event e) {
     HikariDataSource ds = dataSource.getSingle(e);
 
     if (ds == null) {
@@ -265,7 +265,7 @@ public class EffExecuteStatement extends Delay {
     }
     dataSource = (Expression<HikariDataSource>) exprs[1];
     Expression<?> expr = exprs[2];
-    isSync = parseResult.mark == 1;
+    isSyncOk = true;
     if (expr instanceof Variable) {
       Variable<?> varExpr = (Variable<?>) expr;
       var = SkriptUtil.getVariableName(varExpr);
