@@ -31,7 +31,7 @@ repositories {
 dependencies {
   shadow 'org.spigotmc:spigot-api:1.11-R0.1-SNAPSHOT'
   shadow 'ch.njol:skript:2.2-SNAPSHOT'
-  compile 'com.zaxxer:HikariCP:2.6.2'
+  compile 'com.zaxxer:HikariCP:3.4.3'
 }
 
 task buildReadme(type: Javadoc) {
