@@ -53,7 +53,7 @@ import ch.njol.util.Kleenean;
  */
 public class EffExecuteStatement extends Delay {
   static {
-    Skript.registerEffect(EffExecuteStatement.class, new String[] { "[(1¦synchronously)] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]" });
+    Skript.registerEffect(EffExecuteStatement.class, "[(1¦synchronously)] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]");
   }
 
   static String lastError;
