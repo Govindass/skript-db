@@ -1,4 +1,4 @@
 name: skript-db
-version: 0.3.0-Govindas
+version: 0.1.1
 main: com.btk5h.skriptdb.SkriptDB
 depend: [Skript]

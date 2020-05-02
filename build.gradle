@@ -1,12 +1,12 @@
 group 'com.btk5h.skript-db'
-version '0.2.1'
+version '0.1.1'
 
 buildscript {
   repositories {
     jcenter()
   }
   dependencies {
-    classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
   }
 }
 
@@ -24,13 +24,13 @@ repositories {
     url 'https://oss.sonatype.org/content/groups/public/'
   }
   maven {
-    url 'http://maven.njol.ch/repo/'
+    url 'http://jitpack.io/'
   }
 }
 
 dependencies {
-  shadow 'org.spigotmc:spigot-api:1.11-R0.1-SNAPSHOT'
-  shadow 'ch.njol:skript:2.2-SNAPSHOT'
+  shadow 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+  shadow 'com.github.SkriptLang:Skript:2.3.6'
   compile 'com.zaxxer:HikariCP:3.4.3'
 }
 

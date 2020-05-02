@@ -64,7 +64,7 @@ public class Types {
           }
 
           @Override
-          public boolean canBeInstantiated(Class<? extends HikariDataSource> c) {
+          protected boolean canBeInstantiated() {
             return false;
           }
         }));
