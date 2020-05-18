@@ -34,7 +34,7 @@ import java.util.concurrent.Executors;
  * variable in the form `{test::<column name>::<row number>}`
  *
  * @name Execute Statement
- * @pattern execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in)
+ * @pattern [synchronously] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in)
  * [the] [var[iable]] %-objects%]
  * @example execute "select * from table" in {sql} and store the result in {output::*}
  * @example execute "select * from %{table variable}%" in {sql} and store the result in {output::*}
@@ -44,6 +44,7 @@ public class EffExecuteStatement extends Delay {
   static {
     Skript.registerEffect(EffExecuteStatement.class,
         "execute %string% (in|on) %datasource% " +
+            "[and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]", "synchronously execute %string% (in|on) %datasource% " +
             "[and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]");
   }
 
@@ -58,7 +59,17 @@ public class EffExecuteStatement extends Delay {
   private boolean isLocal;
   private boolean isList;
   private Map<String, Object> doLater = new HashMap<>();
+  private boolean isSync;
 
+  private void continueScriptExecution(Event e, String res) {
+    lastError = res;
+
+    if (getNext() != null) {
+      doLater.forEach((name, value) -> setVariable(e, name, value));
+      doLater.clear();
+      TriggerItem.walk(getNext(), e);
+    }
+  }
   @Override
   protected void execute(Event e) {
     DataSource ds = dataSource.getSingle(e);
@@ -67,35 +78,41 @@ public class EffExecuteStatement extends Delay {
 
     if (ds == null)
       return;
+    if (isSync) {
+      String result = executeStatement(ds, baseVariable, query);
+      continueScriptExecution(e, result);
+    } else {
+      Object locals = Variables.removeLocals(e);
+      CompletableFuture<String> sql =
+          CompletableFuture.supplyAsync(() -> executeStatement(ds, baseVariable, query), threadPool);
 
-    Object locals = Variables.removeLocals(e);
-    CompletableFuture<String> sql =
-        CompletableFuture.supplyAsync(() -> executeStatement(ds, baseVariable, query), threadPool);
-
-    sql.whenComplete((res, err) -> {
-      if (err != null) {
-        err.printStackTrace();
-      }
-
-      Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
-        lastError = res;
-
-        if (getNext() != null) {
-          if (locals != null)
-            Variables.setLocalVariables(e, locals);
-          doLater.forEach((name, value) -> setVariable(e, name, value));
-          doLater.clear();
-          TriggerItem.walk(getNext(), e);
-          Variables.removeLocals(e);
+      sql.whenComplete((res, err) -> {
+        if (err != null) {
+          err.printStackTrace();
         }
+
+        Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
+          lastError = res;
+
+          if (getNext() != null) {
+            if (locals != null)
+              Variables.setLocalVariables(e, locals);
+            doLater.forEach((name, value) -> setVariable(e, name, value));
+            doLater.clear();
+            TriggerItem.walk(getNext(), e);
+            Variables.removeLocals(e);
+          }
+        });
       });
-    });
+    }
   }
 
   @Override
   protected TriggerItem walk(Event e) {
     debug(e, true);
-    Delay.addDelayedEvent(e);
+    if (!isSync) {
+      Delay.addDelayedEvent(e);
+    }
     execute(e);
     return null;
   }
@@ -260,6 +277,8 @@ public class EffExecuteStatement extends Delay {
     }
     dataSource = (Expression<HikariDataSource>) exprs[1];
     Expression<?> expr = exprs[2];
+    System.out.println(matchedPattern);
+    isSync = matchedPattern == 1;
     if (expr instanceof Variable) {
       Variable<?> varExpr = (Variable<?>) expr;
       var = varExpr.getName();

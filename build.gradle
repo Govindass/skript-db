@@ -43,6 +43,7 @@ task buildReadme(type: Javadoc) {
   options.addStringOption('file', 'README.md')
   options.addStringOption('markdown', '-quiet')
 }
+
 task fatJar(type: Jar) {
   manifest {
     attributes 'Implementation-Title': 'Gradle Jar File Example',
