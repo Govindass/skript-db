@@ -25,9 +25,11 @@
 
 package com.btk5h.skriptdb;
 
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
 import javax.sql.rowset.RowSetFactory;
@@ -49,12 +51,41 @@ public final class SkriptDB extends JavaPlugin {
   private static SkriptAddon addonInstance;
 
   private static RowSetFactory rowSetFactory;
+  protected FileConfiguration config;
 
   public SkriptDB() {
     if (instance == null) {
       instance = this;
     } else {
       throw new IllegalStateException();
+    }
+  }
+
+  private void setupConfig() throws IOException {
+    //don't check if it exists, because mkdir already does that
+    File file = new File("plugins/skript-db/config.yml");
+    if (file.getParentFile().mkdirs()) {
+      BufferedWriter out = null;
+      try {
+        out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("plugins/skript-db/config.yml", false), StandardCharsets.UTF_8));
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      }
+      try {
+        if (out == null) return;
+
+        out.write("# How many connections can be awaited for simultaneously, may be useful to increase if mysql database is hosted on a separate machine to account for ping.\n");
+        out.write("# If it is hosted within the same machine, set it to the count of cores your processor has or the count of threads your processor can process at once.\n");
+        out.write("thread-pool-size: " + (Runtime.getRuntime().availableProcessors() + 1) + "\n");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+      try {
+        out.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -66,6 +97,11 @@ public final class SkriptDB extends JavaPlugin {
       getAddonInstance().loadClasses("com.btk5h.skriptdb.skript");
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try {
+      setupConfig();
     } catch (IOException e) {
       e.printStackTrace();
     }

@@ -1,5 +1,5 @@
 group 'com.btk5h.skript-db'
-version '0.1.1'
+version '1.1.0'
 
 buildscript {
   repositories {
