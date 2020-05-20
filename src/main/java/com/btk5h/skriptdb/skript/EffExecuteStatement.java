@@ -277,7 +277,6 @@ public class EffExecuteStatement extends Delay {
     }
     dataSource = (Expression<HikariDataSource>) exprs[1];
     Expression<?> expr = exprs[2];
-    System.out.println(matchedPattern);
     isSync = matchedPattern == 1;
     if (expr instanceof Variable) {
       Variable<?> varExpr = (Variable<?>) expr;
