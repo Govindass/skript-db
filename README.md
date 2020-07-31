@@ -29,9 +29,11 @@ Executes a statement on a database and optionally stores the result in a variabl
 
  If a list variable, such as `{test::*}`, is passed, the query result will be mapped to the list
  variable in the form `{test::<column name>::<row number>}`
+ 
+ If `synchronously` is specified, the SQL query will be done on the current thread.
 #### Syntax
 ```
-execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]
+[synchronously] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]
 ```
 
 #### Examples
