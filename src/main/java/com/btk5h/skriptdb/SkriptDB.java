@@ -92,18 +92,19 @@ public final class SkriptDB extends JavaPlugin {
   @Override
   public void onEnable() {
     try {
-      rowSetFactory = RowSetProvider.newFactory();
-
-      getAddonInstance().loadClasses("com.btk5h.skriptdb.skript");
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    try {
       setupConfig();
     } catch (IOException e) {
       e.printStackTrace();
+    } finally {
+      try {
+        rowSetFactory = RowSetProvider.newFactory();
+
+        getAddonInstance().loadClasses("com.btk5h.skriptdb.skript");
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 

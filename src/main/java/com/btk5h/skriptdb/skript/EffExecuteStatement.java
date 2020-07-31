@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
  * @example execute "select * from %{table variable}%" in {sql} and store the result in {output::*}
  * @since 0.1.0
  */
-public class EffExecuteStatement extends Delay {
+public class EffExecuteStatement extends Effect {
   static {
     Skript.registerEffect(EffExecuteStatement.class,
         "execute %string% (in|on) %datasource% " +
@@ -58,17 +58,19 @@ public class EffExecuteStatement extends Delay {
   private VariableString var;
   private boolean isLocal;
   private boolean isList;
-  private Map<String, Object> doLater = new HashMap<>();
   private boolean isSync;
 
-  private void continueScriptExecution(Event e, String res) {
-    lastError = res;
+  private void continueScriptExecution(Event e, Object populatedVariables) {
+    lastError = null;
+    if (populatedVariables instanceof String) {
+      lastError = (String) populatedVariables;
+    } else {
 
-    if (getNext() != null) {
-      doLater.forEach((name, value) -> setVariable(e, name, value));
-      doLater.clear();
-      TriggerItem.walk(getNext(), e);
+      if (getNext() != null) {
+        ((Map<String, Object>) populatedVariables).forEach((name, value) -> setVariable(e, name, value));
+      }
     }
+    TriggerItem.walk(getNext(), e);
   }
   @Override
   protected void execute(Event e) {
@@ -79,11 +81,11 @@ public class EffExecuteStatement extends Delay {
     if (ds == null)
       return;
     if (isSync) {
-      String result = executeStatement(ds, baseVariable, query);
-      continueScriptExecution(e, result);
+      Object populatedVariables = executeStatement(ds, baseVariable, query);
+      continueScriptExecution(e, populatedVariables);
     } else {
       Object locals = Variables.removeLocals(e);
-      CompletableFuture<String> sql =
+      CompletableFuture<Object> sql =
           CompletableFuture.supplyAsync(() -> executeStatement(ds, baseVariable, query), threadPool);
 
       sql.whenComplete((res, err) -> {
@@ -92,13 +94,19 @@ public class EffExecuteStatement extends Delay {
         }
 
         Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
-          lastError = res;
+          lastError = null;
+          if (res instanceof String) {
+            lastError = (String) res;
+          }
 
           if (getNext() != null) {
             if (locals != null)
               Variables.setLocalVariables(e, locals);
-            doLater.forEach((name, value) -> setVariable(e, name, value));
-            doLater.clear();
+
+            if (!(res instanceof String)) {
+              ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
+            }
+            //doLater.clear();
             TriggerItem.walk(getNext(), e);
             Variables.removeLocals(e);
           }
@@ -171,11 +179,11 @@ public class EffExecuteStatement extends Delay {
     return new Pair<>(sb.toString(), parameters);
   }
 
-  private String executeStatement(DataSource ds, String baseVariable, Pair<String, List<Object>> query) {
+  private Object executeStatement(DataSource ds, String baseVariable, Pair<String, List<Object>> query) {
     if (ds == null) {
       return "Data source is not set";
     }
-
+    Map<String, Object> variableList = new HashMap<>();
     try (Connection conn = ds.getConnection();
          PreparedStatement stmt = createStatement(conn, query)) {
 
@@ -191,19 +199,38 @@ public class EffExecuteStatement extends Delay {
           crs.populate(stmt.getResultSet());
 
           if (isList) {
-            populateVariable(crs, baseVariable);
+              ResultSetMetaData meta = crs.getMetaData();
+              int columnCount = meta.getColumnCount();
+
+              for (int i = 1; i <= columnCount; i++) {
+                String label = meta.getColumnLabel(i);
+                variableList.put(baseVariable + label, label);
+              }
+
+              int rowNumber = 1;
+              try {
+                while (crs.next()) {
+                  for (int i = 1; i <= columnCount; i++) {
+                    variableList.put(baseVariable + meta.getColumnLabel(i).toLowerCase(Locale.ENGLISH)
+                        + Variable.SEPARATOR + rowNumber, crs.getObject(i));
+                  }
+                  rowNumber++;
+                }
+              } catch (SQLException ex) {
+                return ex.getMessage();
+              }
           } else {
             crs.last();
-            doLater.put(baseVariable, crs.getRow());
+            variableList.put(baseVariable, crs.getRow());
           }
         } else if (!isList) {
-          doLater.put(baseVariable, stmt.getUpdateCount());
+          variableList.put(baseVariable, stmt.getUpdateCount());
         }
       }
     } catch (SQLException ex) {
       return ex.getMessage();
     }
-    return null;
+    return variableList;
   }
 
   private PreparedStatement createStatement(Connection conn, Pair<String, List<Object>> query) throws SQLException {
@@ -235,26 +262,6 @@ public class EffExecuteStatement extends Delay {
 
   private void setVariable(Event e, String name, Object obj) {
     Variables.setVariable(name.toLowerCase(Locale.ENGLISH), obj, e, isLocal);
-  }
-
-  private void populateVariable(CachedRowSet crs, String baseVariable)
-      throws SQLException {
-    ResultSetMetaData meta = crs.getMetaData();
-    int columnCount = meta.getColumnCount();
-
-    for (int i = 1; i <= columnCount; i++) {
-      String label = meta.getColumnLabel(i);
-       doLater.put(baseVariable + label, label);
-    }
-
-    int rowNumber = 1;
-    while (crs.next()) {
-      for (int i = 1; i <= columnCount; i++) {
-        doLater.put(baseVariable + meta.getColumnLabel(i).toLowerCase(Locale.ENGLISH)
-            + Variable.SEPARATOR + rowNumber, crs.getObject(i));
-      }
-      rowNumber++;
-    }
   }
 
   @Override
