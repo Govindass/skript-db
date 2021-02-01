@@ -78,37 +78,49 @@ public class EffExecuteStatement extends Effect {
     Pair<String, List<Object>> query = parseQuery(e);
     String baseVariable = var != null ? var.toString(e).toLowerCase(Locale.ENGLISH) : null;
 
+    //if data source isn't set
     if (ds == null)
       return;
+
+
     if (isSync) {
       Object populatedVariables = executeStatement(ds, baseVariable, query);
       continueScriptExecution(e, populatedVariables);
     } else {
       Object locals = Variables.removeLocals(e);
+
+      //execute SQL statement
       CompletableFuture<Object> sql =
           CompletableFuture.supplyAsync(() -> executeStatement(ds, baseVariable, query), threadPool);
 
+      //when SQL statement is completed
       sql.whenComplete((res, err) -> {
         if (err != null) {
           err.printStackTrace();
         }
 
         Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
+
+          //handle last error syntax data
           lastError = null;
           if (res instanceof String) {
             lastError = (String) res;
           }
 
           if (getNext() != null) {
+            //if local variables are present
             if (locals != null)
+
+              //bring back local variables
               Variables.setLocalVariables(e, locals);
 
+            //populate SQL data into variables
             if (!(res instanceof String)) {
               ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
             }
-            //doLater.clear();
             TriggerItem.walk(getNext(), e);
-            Variables.removeLocals(e);
+            //let's try with this commented, as it may be not needed? let's test!
+            //Variables.removeLocals(e);
           }
         });
       });
@@ -224,6 +236,7 @@ public class EffExecuteStatement extends Effect {
             variableList.put(baseVariable, crs.getRow());
           }
         } else if (!isList) {
+          //if no results are returned and the specified variable isn't a list variable, put the affected rows count in the variable
           variableList.put(baseVariable, stmt.getUpdateCount());
         }
       }
