@@ -119,8 +119,10 @@ public class EffExecuteStatement extends Effect {
               ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
             }
             TriggerItem.walk(getNext(), e);
-            //let's try with this commented, as it may be not needed? let's test!
-            //Variables.removeLocals(e);
+            //the line below is required to prevent memory leaks
+            //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
+            //so it must be kept
+            Variables.removeLocals(e);
           }
         });
       });
