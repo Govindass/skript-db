@@ -3,6 +3,12 @@
  > Sensible SQL support for Skript.
 ---
 
+### Difference from original skript-db
+- Fixed local variables disappearance in newer Skript versions (very hacky fix, but it works, so that's good!)
+- Thread-pool size is now configurable
+- Uses a newer version of HikariCP
+- Only meant to be used by newer Minecraft versions (1.8 is not supported)
+
 ### Expression `Data Source` => `datasource`
 Stores the connection information for a data source. This should be saved to a variable in a
  `script load` event or manually through an effect command.
