@@ -1,5 +1,6 @@
 package com.btk5h.skriptdb.skript;
 
+import com.btk5h.skriptdb.SkriptDB;
 import com.zaxxer.hikari.HikariDataSource;
 
 import org.bukkit.event.Event;
@@ -56,6 +57,11 @@ public class ExprDataSource extends SimpleExpression<HikariDataSource> {
     }
 
     HikariDataSource ds = new HikariDataSource();
+
+    //allow specifying of own sql driver class name
+    if (!SkriptDB.getInstance().getConfig().getString("sql-driver-class-name").equals("default")) {
+      ds.setDriverClassName(SkriptDB.getInstance().getConfig().getString("sql-driver-class-name"));
+    }
     ds.setJdbcUrl(jdbcUrl);
 
     if (maxLifetime != null) {
