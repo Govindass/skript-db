@@ -51,7 +51,7 @@ public class EffExecuteStatement extends Effect {
   static String lastError;
 
   private static final ExecutorService threadPool =
-      Executors.newFixedThreadPool(SkriptDB.getInstance().getConfig().getInt("thread-pool-size"));
+      Executors.newFixedThreadPool(SkriptDB.getInstance().getConfig().getInt("thread-pool-size", 2));
 
   private Expression<String> query;
   private Expression<HikariDataSource> dataSource;

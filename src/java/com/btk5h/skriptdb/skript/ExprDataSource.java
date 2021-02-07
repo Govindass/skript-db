@@ -59,7 +59,7 @@ public class ExprDataSource extends SimpleExpression<HikariDataSource> {
     HikariDataSource ds = new HikariDataSource();
 
     //allow specifying of own sql driver class name
-    if (!SkriptDB.getInstance().getConfig().getString("sql-driver-class-name").equals("default")) {
+    if (!SkriptDB.getInstance().getConfig().getString("sql-driver-class-name", "default").equals("default")) {
       ds.setDriverClassName(SkriptDB.getInstance().getConfig().getString("sql-driver-class-name"));
     }
     ds.setJdbcUrl(jdbcUrl);
