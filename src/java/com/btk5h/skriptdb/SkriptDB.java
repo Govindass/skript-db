@@ -73,10 +73,6 @@ public final class SkriptDB extends JavaPlugin {
       }
       try {
         if (out == null) return;
-
-        out.write("# How many connections can be awaited for simultaneously, may be useful to increase if mysql database is hosted on a separate machine to account for ping.\n");
-        out.write("# If it is hosted within the same machine, set it to the count of cores your processor has or the count of threads your processor can process at once.\n");
-        out.write("thread-pool-size: " + (Runtime.getRuntime().availableProcessors() + 1) + "\n");
         out.write("# Only change this if you wish to use a different driver than Java's default, like MariaDB driver.\n");
         out.write("# If you use MariaDB, its driver is shaded together with skript-db, so you can just specify:" + "\"org.mariadb.jdbc.Driver\"" + ".\n");
         out.write("sql-driver-class-name:" + "\"default\"" + "\n");
