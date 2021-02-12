@@ -5,7 +5,7 @@
 
 ### Difference from original skript-db
 - Fixed local variables disappearance in newer Skript versions (very hacky fix, but it works, so that's good!)
-- Thread-pool size is now configurable
+- Thread-pool size is now automatically increasing on demand to use of CachedThreadPool, instead of a fixed hard-coded number
 - Uses a newer version of HikariCP
 - Only meant to be used by newer Minecraft versions (1.8 is not supported)
 
