@@ -8,6 +8,7 @@ import ch.njol.util.Kleenean;
 import ch.njol.util.Pair;
 import com.btk5h.skriptdb.SkriptDB;
 import com.btk5h.skriptdb.SkriptUtil;
+import com.btk5h.skriptdb.events.SQLQueryCompleteEvent;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
@@ -83,10 +84,7 @@ public class EffExecuteStatement extends Effect {
       return;
 
 
-    if (isSync) {
-      Object populatedVariables = executeStatement(ds, baseVariable, query);
-      continueScriptExecution(e, populatedVariables);
-    } else {
+
       Object locals = Variables.removeLocals(e);
 
       //execute SQL statement
@@ -95,11 +93,9 @@ public class EffExecuteStatement extends Effect {
 
       //when SQL statement is completed
       sql.whenComplete((res, err) -> {
-        if (err != null) {
-          err.printStackTrace();
-        }
+        if (err != null) { err.printStackTrace(); }
 
-        Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
+       // Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
 
           //handle last error syntax data
           lastError = null;
@@ -110,28 +106,42 @@ public class EffExecuteStatement extends Effect {
           if (getNext() != null) {
             //if local variables are present
             if (locals != null)
-
               //bring back local variables
-              Variables.setLocalVariables(e, locals);
 
             //populate SQL data into variables
             if (!(res instanceof String)) {
-              ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
+
+              //also set variables in the sql query complete event
+
+              SQLQueryCompleteEvent event = new SQLQueryCompleteEvent("something");
+              ((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
+              SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
             }
-            TriggerItem.walk(getNext(), e);
-            //the line below is required to prevent memory leaks
-            //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
-            //so it must be kept
-            Variables.removeLocals(e);
+            if (isSync) {
+
+              Variables.setLocalVariables(e, locals);
+              if (!(res instanceof String)) { ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value)); }
+              TriggerItem.walk(getNext(), e);
+              Variables.removeLocals(e);
+            } else {
+              Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
+                      Variables.setLocalVariables(e, locals);
+                      if (!(res instanceof String)) { ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value)); }
+                      TriggerItem.walk(getNext(), e);
+                      //the line below is required to prevent memory leaks
+                      //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
+                      //so it must be kept
+                      Variables.removeLocals(e);
+            });
+            }
           }
-        });
       });
-    }
   }
 
   @Override
   protected TriggerItem walk(Event e) {
     debug(e, true);
+    //I think no longer needed as of 1.3.0, uncomment if something breaks
     if (!isSync) {
       Delay.addDelayedEvent(e);
     }

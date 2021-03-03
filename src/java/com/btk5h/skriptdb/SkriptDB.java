@@ -75,7 +75,7 @@ public final class SkriptDB extends JavaPlugin {
         if (out == null) return;
         out.write("# Only change this if you wish to use a different driver than Java's default, like MariaDB driver.\n");
         out.write("# If you use MariaDB, its driver is shaded together with skript-db, so you can just specify:" + "\"org.mariadb.jdbc.Driver\"" + ".\n");
-        out.write("sql-driver-class-name:" + "\"default\"" + "\n");
+        out.write("sql-driver-class-name: " + "\"default\"" + "\n");
       } catch (IOException e) {
         e.printStackTrace();
       }
