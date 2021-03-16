@@ -80,11 +80,12 @@ public class EffExecuteStatement extends Effect {
     String baseVariable = var != null ? var.toString(e).toLowerCase(Locale.ENGLISH) : null;
 
     //if data source isn't set
-    if (ds == null)
-      return;
+    if (ds == null) return;
 
-
-
+      boolean sync = false;
+      if (!Bukkit.isPrimaryThread()) {
+        sync = true;
+      }
       Object locals = Variables.removeLocals(e);
 
       //execute SQL statement
@@ -92,10 +93,9 @@ public class EffExecuteStatement extends Effect {
           CompletableFuture.supplyAsync(() -> executeStatement(ds, baseVariable, query), threadPool);
 
       //when SQL statement is completed
-      sql.whenComplete((res, err) -> {
+    boolean finalSync = sync;
+    sql.whenComplete((res, err) -> {
         if (err != null) { err.printStackTrace(); }
-
-       // Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
 
           //handle last error syntax data
           lastError = null;
@@ -117,7 +117,7 @@ public class EffExecuteStatement extends Effect {
               ((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
               SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
             }
-            if (isSync) {
+            if (isSync || finalSync) {
 
               Variables.setLocalVariables(e, locals);
               if (!(res instanceof String)) { ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value)); }
