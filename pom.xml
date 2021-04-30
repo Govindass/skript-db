@@ -35,7 +35,7 @@
     <build>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>src/java</directory>
                 <filtering>true</filtering>
             </resource>
         </resources>
@@ -65,7 +65,7 @@
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>4.0.2</version>
+            <version>4.0.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

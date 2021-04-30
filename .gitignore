@@ -6,3 +6,4 @@
 *.iml
 out/
 target
+compile/
