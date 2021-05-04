@@ -32,10 +32,10 @@
         </repository>
     </repositories>
 
-		<build>
+    <build>
         <resources>
             <resource>
-                <directory>src/java</directory>
+                <directory>src/main/resources</directory>
                 <filtering>true</filtering>
             </resource>
         </resources>
