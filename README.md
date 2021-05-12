@@ -8,6 +8,7 @@
 - Thread-pool size is now automatically increasing on demand to use of CachedThreadPool, instead of a fixed hard-coded number
 - Uses a newer version of HikariCP
 - Only meant to be used by newer Minecraft versions (1.8 is not supported)
+- Replaced `synchronously execute` with `quickly execute`, which allows to speed up queries by 50ms with some risk
 
 ### Expression `Data Source` => `datasource`
 Stores the connection information for a data source. This should be saved to a variable in a
@@ -35,7 +36,7 @@ Executes a statement on a database and optionally stores the result in a variabl
 
  If a list variable, such as `{test::*}`, is passed, the query result will be mapped to the list
  variable in the form `{test::<column name>::<row number>}`
- 
+
  If `quickly` is specified, the SQL query will be done without jumping back to main thread, which speeds it up by 50ms, however that makes code after it to also be on separate thread, you can jump back to main thread by adding `wait a tick`
 #### Syntax
 ```
