@@ -36,10 +36,10 @@ Executes a statement on a database and optionally stores the result in a variabl
  If a list variable, such as `{test::*}`, is passed, the query result will be mapped to the list
  variable in the form `{test::<column name>::<row number>}`
  
- If `synchronously` is specified, the SQL query will be done on the current thread.
+ If `quickly` is specified, the SQL query will be done without jumping back to main thread, which speeds it up by 50ms, however that makes code after it to also be on separate thread, you can jump back to main thread by adding `wait a tick`
 #### Syntax
 ```
-[synchronously] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]
+[quickly] execute %string% (in|on) %datasource% [and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]
 ```
 
 #### Examples
@@ -77,4 +77,3 @@ execute unsafe {fully dynamic query} in {sql}
 ```
 
 ---
-

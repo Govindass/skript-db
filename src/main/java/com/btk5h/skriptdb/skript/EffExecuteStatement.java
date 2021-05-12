@@ -45,7 +45,7 @@ public class EffExecuteStatement extends Effect {
   static {
     Skript.registerEffect(EffExecuteStatement.class,
         "execute %string% (in|on) %datasource% " +
-            "[and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]", "synchronously execute %string% (in|on) %datasource% " +
+            "[and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]", "quickly execute %string% (in|on) %datasource% " +
             "[and store [[the] (output|result)[s]] (to|in) [the] [var[iable]] %-objects%]");
   }
 
@@ -78,11 +78,13 @@ public class EffExecuteStatement extends Effect {
     DataSource ds = dataSource.getSingle(e);
     Pair<String, List<Object>> query = parseQuery(e);
     String baseVariable = var != null ? var.toString(e).toLowerCase(Locale.ENGLISH) : null;
-
     //if data source isn't set
     if (ds == null) return;
 
       boolean sync = false;
+
+      //if current thread is not main thread, then make this query to not have delays
+
       if (!Bukkit.isPrimaryThread()) {
         sync = true;
       }
@@ -113,9 +115,12 @@ public class EffExecuteStatement extends Effect {
 
               //also set variables in the sql query complete event
 
-              SQLQueryCompleteEvent event = new SQLQueryCompleteEvent("something");
-              ((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
-              SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
+              //TEMPORARILY DISABLED, AS THIS WOULD WORSEN PERFORMANCE OF THE QUERIES AND NOT BE USED BY MOST PEOPLE.
+              //I may add config option to enable this later?
+
+              //SQLQueryCompleteEvent event = new SQLQueryCompleteEvent(this.query.getSingle(e));
+              //((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
+              //SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
             }
             if (isSync || finalSync) {
 

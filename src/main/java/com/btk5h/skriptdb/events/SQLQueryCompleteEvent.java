@@ -6,7 +6,6 @@ import org.bukkit.event.HandlerList;
 public class SQLQueryCompleteEvent extends Event {
     private final static HandlerList HANDLERS = new HandlerList();
     private String argument;
-    private Object variables;
 
     public SQLQueryCompleteEvent(String argument) {
         super(true);
@@ -26,7 +25,7 @@ public class SQLQueryCompleteEvent extends Event {
         return HANDLERS;
     }
 
-    public String getArgument() {
+    public String getQuery() {
         return argument;
     }
 
