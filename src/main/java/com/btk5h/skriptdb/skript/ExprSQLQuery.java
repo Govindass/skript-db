@@ -20,41 +20,41 @@ import org.bukkit.event.Event;
  * @since 0.1.0
  */
 public class ExprSQLQuery extends SimpleExpression<String> {
-  static {
-    Skript.registerExpression(ExprSQLQuery.class, String.class,
-        ExpressionType.SIMPLE, "sql query");
-  }
-
-
-  @Override
-  protected String[] get(Event e) {
-    if (e instanceof SQLQueryCompleteEvent){
-      return new String[]{((SQLQueryCompleteEvent) e).getQuery()};
+    static {
+        Skript.registerExpression(ExprSQLQuery.class, String.class,
+                ExpressionType.SIMPLE, "sql query");
     }
-    return null;
-  }
 
-  @Override
-  public boolean isSingle() {
-    return true;
-  }
 
-  @Override
-  public Class<? extends String> getReturnType() {
-    return String.class;
-  }
-
-  @Override
-  public String toString(Event e, boolean debug) {
-    return "sql query";
-  }
-
-  @Override
-  public boolean init(final Expression<?>[] expressions, final int matchedPattern, final Kleenean isDelayed, final SkriptParser.ParseResult parseResult) {
-    if (!ScriptLoader.isCurrentEvent(SQLQueryCompleteEvent.class)) {
-      Skript.error("Cannot use 'sql query' outside of a complete of sql query event", ErrorQuality.SEMANTIC_ERROR);
-      return false;
+    @Override
+    protected String[] get(Event e) {
+        if (e instanceof SQLQueryCompleteEvent) {
+            return new String[]{((SQLQueryCompleteEvent) e).getQuery()};
+        }
+        return null;
     }
-    return true;
-  }
+
+    @Override
+    public boolean isSingle() {
+        return true;
+    }
+
+    @Override
+    public Class<? extends String> getReturnType() {
+        return String.class;
+    }
+
+    @Override
+    public String toString(Event e, boolean debug) {
+        return "sql query";
+    }
+
+    @Override
+    public boolean init(final Expression<?>[] expressions, final int matchedPattern, final Kleenean isDelayed, final SkriptParser.ParseResult parseResult) {
+        if (!ScriptLoader.isCurrentEvent(SQLQueryCompleteEvent.class)) {
+            Skript.error("Cannot use 'sql query' outside of a complete of sql query event", ErrorQuality.SEMANTIC_ERROR);
+            return false;
+        }
+        return true;
+    }
 }
