@@ -105,7 +105,7 @@ public class EffExecuteStatement extends Effect {
 
             if (getNext() != null) {
                 //if local variables are present
-                if (locals != null)
+                if (locals != null) {
                     //bring back local variables
 
                     //populate SQL data into variables
@@ -120,26 +120,26 @@ public class EffExecuteStatement extends Effect {
                         //((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
                         //SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
                     }
-                if (isSync || finalSync) {
-
-                    Variables.setLocalVariables(e, locals);
-                    if (!(res instanceof String)) {
-                        ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
-                    }
-                    TriggerItem.walk(getNext(), e);
-                    Variables.removeLocals(e);
-                } else {
-                    Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
+                    if (isSync || finalSync) {
                         Variables.setLocalVariables(e, locals);
                         if (!(res instanceof String)) {
                             ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
                         }
                         TriggerItem.walk(getNext(), e);
-                        //the line below is required to prevent memory leaks
-                        //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
-                        //so it must be kept
                         Variables.removeLocals(e);
-                    });
+                    } else {
+                        Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
+                            Variables.setLocalVariables(e, locals);
+                            if (!(res instanceof String)) {
+                                ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
+                            }
+                            TriggerItem.walk(getNext(), e);
+                            //the line below is required to prevent memory leaks
+                            //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
+                            //so it must be kept
+                            Variables.removeLocals(e);
+                        });
+                    }
                 }
             }
         });
