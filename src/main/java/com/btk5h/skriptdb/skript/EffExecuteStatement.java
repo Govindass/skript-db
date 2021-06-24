@@ -105,7 +105,6 @@ public class EffExecuteStatement extends Effect {
 
             if (getNext() != null) {
                 //if local variables are present
-                if (locals != null) {
                     //bring back local variables
 
                     //populate SQL data into variables
@@ -121,7 +120,9 @@ public class EffExecuteStatement extends Effect {
                         //SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
                     }
                     if (isSync || finalSync) {
-                        Variables.setLocalVariables(e, locals);
+                        if (locals != null) {
+                            Variables.setLocalVariables(e, locals);
+                        }
                         if (!(res instanceof String)) {
                             ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
                         }
@@ -129,7 +130,9 @@ public class EffExecuteStatement extends Effect {
                         Variables.removeLocals(e);
                     } else {
                         Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
-                            Variables.setLocalVariables(e, locals);
+                            if (locals != null) {
+                                Variables.setLocalVariables(e, locals);
+                            }
                             if (!(res instanceof String)) {
                                 ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
                             }
@@ -140,7 +143,6 @@ public class EffExecuteStatement extends Effect {
                             Variables.removeLocals(e);
                         });
                     }
-                }
             }
         });
     }
