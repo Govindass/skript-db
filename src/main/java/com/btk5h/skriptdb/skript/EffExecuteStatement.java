@@ -105,21 +105,31 @@ public class EffExecuteStatement extends Effect {
 
             if (getNext() != null) {
                 //if local variables are present
-                    //bring back local variables
+                //bring back local variables
 
-                    //populate SQL data into variables
-                    if (!(res instanceof String)) {
+                //populate SQL data into variables
+                if (!(res instanceof String)) {
 
-                        //also set variables in the sql query complete event
+                    //also set variables in the sql query complete event
 
-                        //TEMPORARILY DISABLED, AS THIS WOULD WORSEN PERFORMANCE OF THE QUERIES AND NOT BE USED BY MOST PEOPLE.
-                        //I may add config option to enable this later?
+                    //TEMPORARILY DISABLED, AS THIS WOULD WORSEN PERFORMANCE OF THE QUERIES AND NOT BE USED BY MOST PEOPLE.
+                    //I may add config option to enable this later?
 
-                        //SQLQueryCompleteEvent event = new SQLQueryCompleteEvent(this.query.getSingle(e));
-                        //((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
-                        //SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
+                    //SQLQueryCompleteEvent event = new SQLQueryCompleteEvent(this.query.getSingle(e));
+                    //((Map<String, Object>) res).forEach((name, value) -> setVariable(event, name, value));
+                    //SkriptDB.getPlugin(SkriptDB.class).getServer().getPluginManager().callEvent(event);
+                }
+                if (isSync || finalSync) {
+                    if (locals != null) {
+                        Variables.setLocalVariables(e, locals);
                     }
-                    if (isSync || finalSync) {
+                    if (!(res instanceof String)) {
+                        ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
+                    }
+                    TriggerItem.walk(getNext(), e);
+                    Variables.removeLocals(e);
+                } else {
+                    Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
                         if (locals != null) {
                             Variables.setLocalVariables(e, locals);
                         }
@@ -127,22 +137,12 @@ public class EffExecuteStatement extends Effect {
                             ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
                         }
                         TriggerItem.walk(getNext(), e);
+                        //the line below is required to prevent memory leaks
+                        //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
+                        //so it must be kept
                         Variables.removeLocals(e);
-                    } else {
-                        Bukkit.getScheduler().runTask(SkriptDB.getInstance(), () -> {
-                            if (locals != null) {
-                                Variables.setLocalVariables(e, locals);
-                            }
-                            if (!(res instanceof String)) {
-                                ((Map<String, Object>) res).forEach((name, value) -> setVariable(e, name, value));
-                            }
-                            TriggerItem.walk(getNext(), e);
-                            //the line below is required to prevent memory leaks
-                            //no functionality difference notice with it being removed from my test, but the memory gets filled with leaks
-                            //so it must be kept
-                            Variables.removeLocals(e);
-                        });
-                    }
+                    });
+                }
             }
         });
     }
@@ -176,7 +176,11 @@ public class EffExecuteStatement extends Effect {
             if (o instanceof String) {
                 sb.append(o);
             } else {
-                Expression<?> expr = SkriptUtil.getExpressionFromInfo(o);
+                Expression<?> expr;
+                if (o instanceof Expression)
+                    expr = (Expression<?>) o;
+                else
+                    expr = SkriptUtil.getExpressionFromInfo(o);
 
                 String before = getString(objects, i - 1);
                 String after = getString(objects, i + 1);
